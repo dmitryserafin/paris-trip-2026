@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16202C">
+<title>Париж + Нормандия · 15-19 сент 2026</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Hanken Grotesk',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    --mono:'Spline Sans Mono',ui-monospace,monospace;
+    --ink:#16202C; --ink2:#3b4756; --muted:#727a85;
+    --paper:#ecece6; --surface:#fbfbf7; --line:#dcdbd2;
+    --accent:#9e2b3f;
+    --d1:#b23a48; --d2:#2c7da0; --d3:#c97a2b; --d4:#a23e6e; --d5:#5b6b73;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--sans); color:var(--ink); background:var(--paper); line-height:1.5; -webkit-text-size-adjust:100%}
+
+  header{position:sticky; top:0; z-index:1000; background:var(--ink); color:var(--paper);
+    padding:calc(15px + env(safe-area-inset-top)) 18px 14px}
+  header .kicker{font-family:var(--mono); margin:0 0 5px; font-size:10.5px; font-weight:500; letter-spacing:.2em; text-transform:uppercase; color:#8aa0b4}
+  header h1{font-family:var(--serif); font-weight:600; margin:0; font-size:25px; line-height:1.04; letter-spacing:.2px}
+  header p{margin:6px 0 0; font-size:12.5px; color:#aab6c2}
+
+  .chips{display:flex; gap:8px; overflow-x:auto; padding:11px 16px; background:var(--surface);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:900; -webkit-overflow-scrolling:touch; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto; display:flex; align-items:center; gap:8px; min-height:40px; padding:9px 14px;
+    border:1px solid var(--line); background:transparent; border-radius:8px;
+    font-family:var(--sans); font-size:13px; font-weight:600; color:var(--ink2); white-space:nowrap; cursor:pointer; transition:.15s}
+  .chip .dot{width:8px; height:8px; border-radius:2px; display:inline-block}
+  .chip[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink)}
+
+  .map-wrap{position:relative}
+  #map{height:48vh; min-height:300px; width:100%; background:#d8dde0; z-index:1}
+  .leaflet-popup-content-wrapper{border-radius:13px}
+  .leaflet-popup-content{margin:12px 14px; font-family:var(--sans); font-size:13px; line-height:1.5; color:var(--ink)}
+  .leaflet-popup-content b{font-size:14px}
+  .pop-link{display:inline-block; margin-top:8px; font-weight:700; color:var(--accent); text-decoration:none}
+  .pin span{display:block; width:18px; height:18px; border-radius:50%; border:2.5px solid var(--paper); box-shadow:0 1px 5px rgba(20,30,45,.45)}
+  .pin.sel span{width:26px; height:26px; border-width:3px; box-shadow:0 0 0 5px rgba(158,43,63,.22), 0 2px 9px rgba(20,30,45,.5)}
+  .pin.alt span{width:13px; height:13px; border-width:3px; box-shadow:0 1px 3px rgba(20,30,45,.4)}
+
+  .locate-btn{position:absolute; right:13px; bottom:16px; z-index:600; width:46px; height:46px; border-radius:12px;
+    border:1px solid var(--line); background:var(--surface); color:var(--ink); box-shadow:0 3px 10px rgba(20,30,45,.22);
+    font-size:22px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center}
+  .locate-btn.on{background:#1668c2; color:#fff; border-color:#1668c2}
+  .userdot{width:16px; height:16px; border-radius:50%; background:#1668c2; border:3px solid #fff; box-shadow:0 0 0 2px rgba(22,104,194,.35), 0 1px 6px rgba(20,30,45,.5)}
+
+  main{padding:4px 0 48px}
+  .hint{font-size:12px; color:var(--muted); padding:13px 18px 2px; line-height:1.55; max-width:760px}
+
+  section.day{padding:8px 16px 6px}
+  .dayhead{display:flex; align-items:baseline; gap:11px; margin:16px 0 12px}
+  .dayhead .num{font-family:var(--serif); font-weight:700; font-size:30px; line-height:.85; color:var(--day); min-width:24px}
+  .dayhead .meta{flex:1}
+  .dayhead .meta .date{font-family:var(--serif); font-weight:600; font-size:16px; line-height:1.1}
+  .dayhead .meta .sub{font-size:12px; color:var(--muted); margin-top:2px}
+  .dayhead .wake{font-family:var(--mono); font-size:10.5px; color:var(--muted); text-align:right; white-space:nowrap; letter-spacing:.02em}
+
+  .daybody{position:relative; padding-left:22px}
+  .daybody:before{content:''; position:absolute; left:6px; top:14px; bottom:16px; width:2px; background:var(--day); opacity:.32; border-radius:2px}
+
+  .card{position:relative; background:var(--surface); border:1px solid var(--line); border-radius:13px;
+    padding:12px 14px; margin:9px 0; cursor:pointer; transition:transform .12s}
+  .card:before{content:''; position:absolute; left:-21px; top:16px; width:11px; height:11px; border-radius:50%;
+    background:var(--day); border:2.5px solid var(--paper); box-shadow:0 0 0 1px var(--line)}
+  .card:active{transform:scale(.992)}
+  .card .top{display:flex; align-items:center; gap:10px}
+  .card .time{font-family:var(--mono); font-weight:600; font-size:12px; letter-spacing:.02em; color:var(--ink);
+    border:1px solid var(--line); border-radius:6px; padding:3px 7px; flex:0 0 auto}
+  .card .name{font-family:var(--serif); font-weight:600; font-size:16px; line-height:1.15}
+  .card .note{font-size:13px; color:var(--ink2); margin-top:7px; line-height:1.5}
+  .card .tip{font-size:12.5px; margin-top:8px; line-height:1.5; color:var(--ink)}
+  .card .tip b{display:block; font-family:var(--mono); font-weight:600; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:2px}
+  .card .links{margin-top:11px; display:flex; gap:9px}
+  .card .links a{font-size:12px; font-weight:700; color:var(--ink); text-decoration:none; border:1px solid var(--line); border-radius:9px; padding:8px 12px; background:var(--paper)}
+  .card .links a:active{background:#e3e2d8}
+  .card .opts{margin-top:12px; padding-top:11px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:10px}
+  .card .opts .lbl{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.13em; color:var(--muted); font-weight:600}
+  .card .opt{position:relative; padding-left:15px; font-size:12.5px; line-height:1.5; color:var(--ink2)}
+  .card .opt:before{content:''; position:absolute; left:0; top:6px; width:7px; height:7px; border-radius:50%; background:transparent; border:2px solid var(--day)}
+  .card .opt a.on{font-weight:700; color:var(--ink); text-decoration:none; border-bottom:1.5px solid var(--accent)}
+  .card .opt a.on:after{content:" ›"; color:var(--accent); border:0}
+
+  .card .badge{font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent); border:1px solid var(--accent); border-radius:5px; padding:2.5px 6px; margin-left:auto; flex:0 0 auto}
+  .card.secret{display:none}
+  body.show-secret .card.secret{display:block; border-style:dashed; border-color:var(--accent)}
+  .secret-toggle{display:inline-flex; align-items:center; gap:8px; background:none; border:none; padding:8px 4px; margin-top:6px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; color:var(--muted); cursor:pointer}
+  .secret-toggle .sw{position:relative; width:32px; height:18px; border-radius:10px; background:#c6c5ba; transition:.15s; flex:0 0 auto}
+  .secret-toggle .sw:after{content:''; position:absolute; left:2px; top:2px; width:14px; height:14px; border-radius:50%; background:#fff; transition:left .15s; box-shadow:0 1px 2px rgba(20,30,45,.3)}
+  body.show-secret .secret-toggle{color:var(--accent)}
+  body.show-secret .secret-toggle .sw{background:var(--accent)}
+  body.show-secret .secret-toggle .sw:after{left:16px}
+
+  footer{padding:20px 18px 44px; font-size:11.5px; color:var(--muted); line-height:1.6; max-width:760px}
+
+  @media (min-width:760px){
+    #map{height:56vh}
+    section.day, .hint, footer{max-width:760px; margin-left:auto; margin-right:auto}
+  }
+</style>
+</head>
+<body>
+<header>
+  <p class="kicker">Carnet de voyage · 15-19 сент 2026</p>
+  <h1>Париж и Нормандия</h1>
+  <p>День рождения Нади · только метро</p>
+</header>
+
+<div class="chips" id="chips"></div>
+<div class="map-wrap">
+  <div id="map"></div>
+  <button id="locate" class="locate-btn" aria-label="Показать мою локацию" title="Моя локация">◎</button>
+</div>
+
+<main>
+  <div class="hint">Каждый день - своя линия со станциями. Крупные точки - основной маршрут, кольца - альтернативы и магазины под пикник. Тап по карточке наводит карту на станцию; тап по кольцу открывает вариант.</div>
+  <div id="list"></div>
+</main>
+
+<footer>
+  Маршрут под ваш перелет, жилье на rue Alexandre Parodi и билеты на Мулен Руж.<br>
+  Часы работы и наличие проверяй на месте - могут меняться.<br>
+  <button class="secret-toggle" id="secretToggle" type="button"><span class="sw"></span><span id="secretLbl">✦ выкл</span></button>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DAYS = [
+  {n:1, date:"15 сент · вторник",  color:"var(--d1)", hex:"#b23a48", title:"Приезд + восток Парижа", wake:"подъем ~03:30"},
+  {n:2, date:"16 сент · среда",    color:"var(--d2)", hex:"#2c7da0", title:"Нормандия: Этрета (поезд + автобус)", wake:"подъем ~06:00"},
+  {n:3, date:"17 сент · четверг",  color:"var(--d3)", hex:"#c97a2b", title:"Центр + башня (видео)", wake:"подъем ~08:30"},
+  {n:4, date:"18 сент · пятница",  color:"var(--d4)", hex:"#a23e6e", title:"День рождения · Монмартр · Мулен Руж", wake:"подъем ~08:00"},
+  {n:5, date:"19 сент · суббота",  color:"var(--d5)", hex:"#5b6b73", title:"Вылет", wake:"подъем ~08:30"}
+];
+
+const STOPS = [
+  {d:1, t:"12:00", name:"Ваша квартира (rue Alexandre Parodi)", lat:48.8802399, lng:2.3651324, pid:"ChIJibRzO3Ru5kcRvlcfCPoz9ZY", note:"База в 10-м округе, у канала. Заселение 12:00. С Бовэ: навета до Porte Maillot, далее M1 до Palais Royal, M7 до Château Landon (~40 мин). Подъем ~03:30-04:00, но это еще под Варшавой."},
+  {d:1, t:"13:00", name:"Обед: Chez Prune", lat:48.8717011, lng:2.3645708, pid:"ChIJoTaqxQtu5kcRtabbV-ogavc", note:"Культовое кафе-бистро на Канале Сен-Мартен, дух местной богемы. 5 мин от дома.", tip:"Дежурное блюдо дня и тарт на террасе у воды.", opts:[
+    {name:"Marché des Enfants Rouges", tip:"старейший крытый рынок, фуд-корт (крепы Lulu, Chez Taeko, фалафель), ~20 мин в Маре", q:"Marche des Enfants Rouges Paris"},
+    {name:"Du Pain et des Idées", tip:"багет и выпечка для пикника у канала (открыт во вт)", q:"Du Pain et des Idees Paris"},
+    {name:"Fromagerie Fernin", tip:"сыр туда же (204 rue Fbg St-Martin, 4.9; до 13:00 и с 16:00), и на берег канала", q:"Fromagerie Fernin Paris"},
+    {name:"Franprix (канал)", tip:"супермаркет прямо на канале Сен-Мартен: багет, сыр, фрукты под пикник на набережной", q:"Franprix Canal Saint-Martin Paris"}
+  ]},
+  {d:1, t:"14:30", name:"Кладбище Пер-Лашез", lat:48.861472, lng:2.3934725, pid:"ChIJhadpXItt5kcRGWQLUydhz6E", note:"Самое знаменитое кладбище мира - тенистый парк-некрополь. M5 Jacques Bonsergent до République, M3 до Père Lachaise (~20 мин). До 18:00.", see:"Могилы Джима Моррисона, Оскара Уайльда, Эдит Пиаф, Шопена; карту скачай заранее."},
+  {d:1, t:"16:30", name:"Мишки: Chocolaterie Cyril Lignac", lat:48.8528609, lng:2.3852791, pid:"ChIJA-2rtAty5kcR1xFi8ZdOrdo", note:"Шоколатери шефа Сирила Линьяка. ~10-12 мин пешком на юг от Пер-Лашез. До 19:00 (пн закрыт, у нас вторник).", tip:"Те самые шоколадные мишки в металлической коробке + горячий шоколад (один из лучших в городе).", opts:[
+    {name:"Marché Beauvau (Aligre)", tip:"рынок в ~10 мин: сыр, хлеб, фрукты под пикник; крытая часть с 16:00", q:"Marche Beauvau Aligre Paris"}
+  ]},
+  {d:1, t:"17:30", name:"Площадь Вогезов", lat:48.8556114, lng:2.3655266, pid:"ChIJUeiI4P9x5kcRqEwHl6V32GQ", note:"Старейшая регулярная площадь Парижа (1612) в Маре. ~15 мин от шоколатери (M8 или пешком). Тихая передышка в аркадах перед ужином.", see:"Симметричные краснокирпичные особняки с аркадами и сад в центре; в углу - бесплатный дом-музей Виктора Гюго (до 18:00). Рядом тихий сад Hôtel de Sully."},
+  {d:1, t:"20:00", name:"Ужин: Bouillon Julien", lat:48.8705635, lng:2.3532275, pid:"ChIJg8kIZRFu5kcRULZqe9xS-a0", note:"Классический парижский «бульон» в роскошном интерьере Бель-эпок, ~12 мин от дома. Дешево, без брони - живая очередь, приходи к открытию ужина.", tip:"Французская классика задешево: яйцо-майонез, эскарго, беф бургиньон, баба о рому. Горячее ~9-14 EUR.", opts:[
+    {name:"Bouillon République", tip:"еще один «бульон», самый дешевый и огромный; те же французские классики (бронь желательна)", q:"Bouillon Republique Paris"},
+    {name:"Casimir", tip:"французский бистро у Gare du Nord, рыночное меню дня, без понтов", q:"Casimir rue de Belzunce Paris"},
+    {name:"Bouillon Chartier", tip:"легендарный дешевый «бульон» (с 1896) у Гран-Бульваров: эскарго, профитроли; очередь", q:"Bouillon Chartier Grands Boulevards Paris"},
+    {name:"Le Réveil du 10ème", tip:"домашний парижский бистро у дома: конфи из утки, антрекот; вс закрыт", q:"Le Reveil du 10eme Paris"},
+    {name:"Monop' (у дома)", tip:"супермаркет у дома до 23:50: салаты, киш, сыр - если нет сил на очередь в бульон", q:"Monop' Gare de l'Est Paris"}
+  ]},
+
+  {d:2, t:"07:00", name:"Вокзал Сен-Лазар (поезд 07:40)", lat:48.8759852, lng:2.3255098, pid:"", book:"билеты SNCF Nomad заранее (туда 07:40, обратно 20:09; ~74 EUR/2)", note:"От дома: пешком до Magenta ~10 мин, RER E одна остановка до Haussmann-Saint-Lazare (~5 мин). Быть на платформе к 07:25. Поезд до Гавра 07:40-09:49, без пересадок.", tip:"Завтрак навынос с собой - кофе и выпечка в поезд.", opts:[
+    {name:"Du Pain et des Idées", tip:"эскарго или круассан навынос на дорогу (открыт в ср с 7:00)", q:"Du Pain et des Idees Paris"}
+  ]},
+  {d:2, t:"10:12", name:"Гавр: автобус 509 в Этрета", lat:49.4922422, lng:0.1250562, pid:"", book:"билет M-Ticket в приложении Atoumod (или наличкой водителю, ~3 EUR/чел)", note:"Автовокзал (Gare Routière) прямо у ж/д вокзала. Рейс 10:12, в Этрета (Mairie) в 11:20. ВАЖНО: расписание 509 обновится 1 сентября 2026 - сверь свежий PDF на nomad.normandie.fr. Если взять поезд раньше (~06:40 из Парижа), успеете на автобус 09:30 и будете на скалах на час раньше.", see:"Валидируй билет при каждой посадке - контролеры штрафуют."},
+  {d:2, t:"11:25", name:"Кофе: Pani Pitt", lat:49.707079, lng:0.2058438, pid:"ChIJ80B_tZEX4EcR7z_Uaq1ajKo", note:"Спешелти-кофейня (4.8) в центре Этрета, 2 мин от остановки автобуса. Открыта в ср 10:00-17:00. Кофе после дороги - и на скалы.", tip:"Флэт уайт или матча айс-латте + теплый круассан или чизкейк; крок-месье, если хочется плотнее."},
+  {d:2, t:"12:00", name:"Скалы Этрета (Falaise d'Aval)", lat:49.7072999, lng:0.1935822, pid:"ChIJ49lcCOwX4EcRUL4WVbcUKvM", note:"Меловые скалы-арки над Ла-Маншем, которые писал Моне. От кофейни до пляжа ~5 мин. Обувь и куртка (ветер). Весь день ваш - без гонки.", see:"Поднимись на Falaise d'Aval к арке и «игле»; тропа наверху - виды на обе стороны."},
+  {d:2, t:"13:30", name:"Обед: Le Homard Bleu", lat:49.7096014, lng:0.2037437, pid:"ChIJP9P6z8AX4EcRKaOX9Rlghww", note:"Рыбный ресторан на набережной Этрета, открыт в ср.", tip:"Мидии-фри в сливочно-чесночном соусе и плато морепродуктов с видом на море.", opts:[
+    {name:"Carrefour City Étretat", tip:"мини-маркет под пикник на скалах: в ср пекарни Этрета закрыты, бери тут или захвати выпечку в Париже до выезда", q:"Carrefour City Etretat"},
+    {name:"Restaurant du Golf d'Étretat", tip:"французский ресторан с панорамой скал у гольф-поля, открыт в ср на обед; виды того стоят", q:"Restaurant du Golf d'Etretat"}
+  ]},
+  {d:2, t:"15:00", name:"Falaise d'Amont и часовня", lat:49.7106986, lng:0.2137976, pid:"", note:"Вторая скала, северная - подъем по лестнице от пляжа или серпантином. Наверху часовня Notre-Dame de la Garde.", see:"Отсюда лучший вид на арку Aval и «иглу» - классическая открытка Этрета."},
+  {d:2, t:"16:00", name:"Jardins d'Étretat (каменные лица)", lat:49.7106287, lng:0.2059731, pid:"ChIJg8I5bscX4EcRwO6xtq2V5cg", note:"Неофутуристические сады на вершине Amont, рядом с часовней: топиарии-волны над обрывом и те самые каменные лица в газоне - «Капли дождя» Самюэля Сальседо. Открыто до 18:30, вход ~14 EUR. Часа хватает - и как раз к автобусу.", see:"Лица-«капли» среди зелени, бамбуковая роща с лавками, вид на арку сквозь топиарии - самые нестандартные кадры Этрета."},
+  {d:2, t:"18:20", name:"Этрета: автобус LiA 21 в Гавр", lat:49.7038558, lng:0.2119632, pid:"", book:"сверь рейс 18:20 на СРЕДУ на transports-lia.fr (скрин был за вс) + свежий PDF 509", note:"Остановка Le Grandval - юго-восточный край городка, от пляжа ~10-12 мин В ГОРКУ, выходи в 18:00. Прибытие Гавр (Gares) 19:22, до поезда 47 мин. Страховка: 509 в ~17:28 от Mairie (Гавр 18:36) - если LiA покажет другое время или объезды. Билет ~2 EUR, у водителя или в приложении LiA.", see:"До 18:00 - вечерний свет на Falaise d'Aval с пляжа, лучшие кадры дня."},
+  {d:2, t:"19:25", name:"Гавр: перекус в поезд", lat:49.4938423, lng:0.1258317, pid:"", note:"После LiA времени на ресторан нет - бери навынос у вокзала (булочная/Monop') или заранее в Этрета. Если уехал ранним 509 (18:36) - успеваешь на спокойный ужин: брассери у вокзала, центр Перре (ЮНЕСКО) рядом."},
+  {d:2, t:"20:09", name:"Поезд в Париж (20:09-22:23)", lat:49.4922422, lng:0.1250562, pid:"", note:"Прямой до Сен-Лазара. Дома ~23:00: RER E от Haussmann-Saint-Lazare до Magenta и пешком."},
+
+  {d:3, t:"09:00", name:"Завтрак: Liberté", lat:48.8730875, lng:2.3615623, pid:"ChIJuealZgxu5kcR0A-bQ7H9EVs", note:"Кофе + круассан у дома: Гроле теперь берем самовывозом в полдень, так что утром просто и дешево. Liberté открыта в чт.", tip:"Топовый круассан и пан-о-шоколя - один из лучших в Париже.", opts:[
+    {name:"Du Pain et des Idées", tip:"эскарго-выпечка и круассаны, в чт открыт (~7 мин от дома)", q:"Du Pain et des Idees Paris"},
+    {name:"Café Tranquille", tip:"спешелти-кофе с выпечкой рядом", q:"Cafe Tranquille Paris 10"},
+    {name:"WHITE Coffee", tip:"еще кофейня рядом, топ айс-латте", q:"WHITE Coffee Paris 10"},
+    {name:"Monop' (у дома)", tip:"супермаркет у дома: йогурт, выпечка, фрукты навынос - быстрый завтрак", q:"Monop' Gare de l'Est Paris"}
+  ]},
+  {d:3, t:"10:00", secret:true, name:"ДУХИ: Fragonard Haussmann", lat:48.8720758, lng:2.3292707, pid:"ChIJZX8XrzZu5kcRd4CLPIEitaY", note:"Бутик парфюмерного дома из Грасса, с 10:00. M7 Château Landon до Opéra. Загляни сюда без Нади - сюрприз.", tip:"Eau de toilette (Belle de Nuit, Étoile) ~30 EUR за 50 мл и мыло - лучшие сувениры."},
+  {d:3, t:"10:20", name:"Церковь Мадлен", lat:48.8700435, lng:2.3245502, pid:"ChIJ7xwB9TJu5kcRtsJIlPxT918", note:"Неоклассический храм в виде греческого храма-периптера (52 коринфские колонны), строился при Наполеоне как храм воинской славы. 5-7 мин пешком от Fragonard. Вход бесплатный, с 9:30.", see:"Полумрак и три купола внутри, скульптура Магдалины над алтарем (здесь отпевали Шопена); с крыльца - перспектива по rue Royale на площадь Согласия."},
+  {d:3, t:"10:50", name:"Сад Пале-Рояль", lat:48.8649723, lng:2.3378061, pid:"ChIJ5bx0qiVu5kcRs_dMpI5ttiY", note:"Тихий сад бывшего дворца кардинала Ришелье, спрятанный за аркадами. ~15 мин пешком от Мадлен.", see:"Черно-белые «Колонны Бюрена», аркады с лавками, фонтаны - очень фотогенично и бесплатно."},
+  {d:3, t:"11:20", name:"Сад Тюильри", lat:48.8634916, lng:2.3274943, pid:"ChIJAQAAMCxu5kcRx--_4QnbGcI", note:"Королевский регулярный сад между Лувром и площадью Согласия, разбит Ле Нотром (автором Версаля). 5-8 мин от Пале-Рояля.", see:"Аллеи со скульптурами, пруды с зелеными стульями (займи и посиди как парижане), вид на Лувр и обелиск Конкорд."},
+  {d:3, t:"12:00", name:"Самовывоз: Cédric Grolet", lat:48.8678522, lng:2.3332982, pid:"ChIJhwfsMQxv5kcRZRcJvU--cOw", note:"Самовывоз (click & collect) на cedric-grolet.com: бери окно 12:00-15:00 и забери к 12:00 - без очереди. От Тюильри ~12 мин пешком к Опера. Закрыт пн/вт (в чт работает).", book:"предзаказ на сайте за 24 ч, окно 12:00-15:00", tip:"Десерт-обманка «фрукт» (~16-18 EUR) - съешь как десерт к обеду или в Люксембурге. Манговую тарт к сентябрю снимут, будут другие сезонные."},
+  {d:3, t:"13:00", name:"Sainte-Chapelle", lat:48.855375, lng:2.3449609, pid:"ChIJR3122B9u5kcRaCck3PlB9DM", note:"Готическая капелла-реликварий 1248 года: Людовик Святой построил ее под терновый венец Христа - шкатулка из витражей вместо стен. От Гроле: M7 Palais Royal до Pont Neuf + 5 мин пешком. Строгий контроль на входе.", book:"билет-слот на ~13:00 на tickets.monuments-nationaux.fr", see:"Верхняя капелла: 15 витражей высотой ~15 м - при солнце стены светятся."},
+  {d:3, t:"13:45", name:"Notre-Dame", lat:48.8529682, lng:2.3499021, pid:"ChIJATr1n-Fx5kcRjQb6q6cdQDY", note:"Готический собор XII-XIV веков, сердце Парижа («нулевой километр»), заново открыт после пожара 2019 и реставрации. 8 мин пешком от Сент-Шапель. В чт до 22:00.", book:"бесплатный таймслот на ~13:45 на notredamedeparis.fr", see:"Обновленный после реставрации неф и розы-витражи; сокровищница, если открыта."},
+  {d:3, t:"14:45", name:"Обед: Les Pipos", lat:48.8474478, lng:2.3483706, pid:"ChIJB4fzbOZx5kcRqQ_HrlaIjlg", note:"Душевный классический бистро у Пантеона (4.6). Пешком через мост в Латинский квартал ~13 мин. Закрыт вс. Десерт от Гроле - сюда.", tip:"Беф бургиньон, луковый суп, сырная доска (это бистро-фромажери).", opts:[
+    {name:"Rue Mouffetard (рынок-улица)", tip:"сыр, хлеб, фрукты под пикник в Люксембурге; лавки до ~13:00, магазины дольше", q:"Rue Mouffetard Market Paris"},
+    {name:"Café de la Nouvelle Mairie", tip:"маленький бистро-кафе у Пантеона, дежурные блюда, душевно", q:"Cafe de la Nouvelle Mairie Paris"},
+    {name:"Comptoir du Panthéon", tip:"кафе-брассери прямо напротив Пантеона: луковый суп, эскарго, вид; недорого", q:"Comptoir du Pantheon Paris"},
+    {name:"Monop' (Латинский квартал)", tip:"супермаркет на bd Saint-Germain: готовые салаты и сэндвичи под пикник в Люксембурге", q:"Monop' Saint-Germain Paris 5"}
+  ]},
+  {d:3, t:"15:45", name:"Пантеон", lat:48.8462218, lng:2.3464138, pid:"ChIJc8mX0udx5kcRWKcjTwDr5QA", note:"Неоклассический мавзолей «великих людей Франции» с гигантским куполом - бывшая церковь св. Женевьевы, после революции ставшая светской усыпальницей. 5 мин пешком от Les Pipos.", see:"Маятник Фуко в центре, крипта (Кюри, Гюго, Вольтер); при возможности - колоннада купола с видом."},
+  {d:3, t:"15:55", name:"Jardin du Luxembourg", lat:48.8466144, lng:2.3363309, pid:"ChIJe2jeNttx5kcRi_mJsGHdkQc", note:"Сад Люксембургского дворца (ныне Сенат), любимый парк парижан с 1600-х. 7 мин пешком от Пантеона. Быстрая прогулка и десерт от Гроле - дальше Дом инвалидов закрывается в 18:00, не засиживайся.", see:"Большой пруд с игрушечными корабликами, фонтан Медичи."},
+  {d:3, t:"16:30", name:"Дом инвалидов: гробница Наполеона", lat:48.8550614, lng:2.3125393, pid:"ChIJ2egWXk5x5kcRZZl30h-FWtY", note:"7-й округ, рядом с башней. RER C Saint-Michel до Invalides (2 остановки) или M10 La Tour-Maubourg. ВАЖНО: закрытие в 18:00, последний вход ~17:15 - не опаздывай.", see:"Под золотым куполом - саркофаг Наполеона из красного кварцита в круглой крипте; вокруг Музей армии (доспехи, наполеоновское крыло)."},
+  {d:3, t:"18:30", name:"Trocadéro (эспланада)", lat:48.8617, lng:2.2876, pid:"", note:"Эспланада между крыльями дворца Шайо (построен к выставке 1937) на холме напротив башни - главная смотровая Парижа. На запад: Odéon M10 до La Motte-Picquet, M6 до Trocadéro (~30-35 мин). Отсюда 8 мин до точки видео.", see:"Открыточная панорама Эйфелевой башни и фонтаны Варшавской площади - лучшие кадры."},
+  {d:3, t:"19:20", name:"ВИДЕО: Avenue de Camoëns", lat:48.8597306, lng:2.2860582, pid:"ChIJOXSDA_1v5kcROE3OZBy09x8", note:"~8 мин пешком от Trocadéro. Приходи пораньше - очередь.", see:"Башня встает в просвете между домами - культовый кадр, золотой час ~19:30. Снять ДО ДР!"},
+  {d:3, t:"20:30", name:"Ужин: Café du Marché", lat:48.856669, lng:2.306326, pid:"ChIJU-XFaSdw5kcReNgoNaOVGe8", book:"столик желательно (TheFork), вечер четверга", note:"Бюджетный французский бистро на пешеходной rue Cler у башни, большие порции. Домой: M8 École Militaire до Strasbourg-Saint-Denis, M4 до Gare de l'Est.", tip:"Луковый суп, утиная ножка, антрекот с картошкой фри - сытно и недорого.", opts:[
+    {name:"Le Petit Cler", tip:"соседний французский бистро на той же rue Cler: крок-мадам, тарт татен", q:"Le Petit Cler Paris"},
+    {name:"Les Cocottes", tip:"французские блюда в чугунках (Кристиан Констан) на rue Saint-Dominique, чуть наряднее", q:"Les Cocottes Christian Constant Paris"},
+    {name:"Thoumieux", tip:"исторический брассери, если захочется шикануть: суфле, рыба, мясо (дороже)", q:"Thoumieux Paris"},
+    {name:"Franprix (rue Cler)", tip:"супермаркет прямо на rue Cler: сыр, шаркютри, фрукты - быстрый пикник вместо ресторана", q:"Franprix rue Cler Paris"}
+  ]},
+
+  {d:4, t:"08:30", name:"Завтрак: Du Pain et des Idées", lat:48.8712453, lng:2.3628904, pid:"ChIJBTgW_Atu5kcRE1YZZIA4EzQ", note:"Одна из лучших булочных Парижа, ~7 мин от дома, в пт с 7:00. Возьми к пробуждению Нади как сюрприз вместе с цветами.", tip:"«Улитка»-эскарго фисташка-шоколад (визитка), pain des amis, банан-шоколад круассан.", opts:[
+    {name:"Café Tranquille", tip:"спешелти-кофе к выпечке (147 rue Fbg St-Denis)", q:"Cafe Tranquille Paris 10"},
+    {name:"WHITE Coffee", tip:"еще кофейня рядом, топ айс-латте (50 rue Fbg St-Denis)", q:"WHITE Coffee Paris 10"},
+    {name:"HolyBelly 5", tip:"если хочется панкейков: бранч с беконом и кленовым сиропом (как было изначально)", q:"HolyBelly 5 Paris"},
+    {name:"Monop' (у дома)", tip:"супермаркет у дома навынос, если не до сидячей выпечки", q:"Monop' Gare de l'Est Paris"}
+  ]},
+  {d:4, t:"09:15", secret:true, name:"Цветы: Le Pélican", lat:48.8804142, lng:2.3641067, pid:"ChIJc1d6GnRu5kcR8z2uUBRSrSI", note:"Цветочный у дома, с 9:00, 10 мин пешком. Букет-сюрприз, пока Надя досыпает.", tip:"Сезонный букет; духи уже куплены вчера в Fragonard."},
+  {d:4, t:"13:30", name:"Sacré-Cœur", lat:48.8867046, lng:2.3431043, pid:"ChIJ442GNENu5kcRGYUrvgqHw88", note:"Белоснежная базилика конца XIX века на вершине холма Монмартр - самая высокая точка Парижа после башни, строилась «во искупление» после войны 1870-го. M4 Gare de l'Est до Château Rouge, пешком вверх.", see:"Поднимись на купол ради вида; внутри - огромная мозаика Христа. Со ступеней - лучший бесплатный вид на Париж."},
+  {d:4, t:"14:00", name:"Place du Tertre", lat:48.8865728, lng:2.3408278, pid:"ChIJF9eP_k9u5kcRYujwQAgfqvQ", note:"Площадь художников в сердце старого Монмартра - с XIX века здесь писали Пикассо, Утрилло и весь монпарнасский цех; мольберты стоят до сих пор. Вниз по rue Lepic.", see:"Закажи портрет/шарж у художников; по пути - розовый домик La Maison Rose и виноградник Монмартра."},
+  {d:4, t:"15:00", name:"Кофе: Café des Deux Moulins", lat:48.8849197, lng:2.3336242, pid:"ChIJt_Jyok9u5kcRRosujpFK-70", note:"Кафе из фильма «Амели» на rue Lepic.", tip:"Крем-брюле (как у Амели) и фото у постера фильма.", opts:[
+    {name:"Le Grenier à Pain (Abbesses)", tip:"багет для пикника (одна из лучших багет Парижа), 38 rue des Abbesses", q:"Le Grenier a Pain Abbesses Paris"},
+    {name:"Butte Fromagère", tip:"сыр туда же, 32 rue des Abbesses (4.7)", q:"Butte Fromagere Abbesses Paris"},
+    {name:"Square Louise Michel", tip:"лужайка с видом под Сакре-Кер - сам пикник", q:"Square Louise Michel Paris"}
+  ]},
+  {d:4, t:"17:00", name:"ЗАЕЗД ДОМОЙ (освежиться)", lat:48.8802399, lng:2.3651324, pid:"ChIJibRzO3Ru5kcRvlcfCPoz9ZY", note:"Переодеться и отдохнуть перед ужином и поздним шоу. Pigalle M2 до Barbès, M4 до Gare de l'Est (~20 мин)."},
+  {d:4, t:"20:00", name:"Ужин на ДР: La Mascotte", lat:48.8857022, lng:2.335517, pid:"ChIJVVXp9k9u5kcRRBfM2_21H3s", book:"столик обязательно + сказать про ДР (TheFork/сайт)", note:"Классический монмартрский брассери (с 1889). От дома наверх ~25 мин.", tip:"Устрицы и плато морепродуктов, сырная тарелка - праздничная классика.", opts:[
+    {name:"Le Moulin de la Galette", tip:"под исторической мельницей, романтично и празднично: эскарго, луковый суп, баранина. Бронь заранее (подороже)", q:"Le Moulin de la Galette Paris"},
+    {name:"Le Coq & Fils", tip:"птичий дом Вестерманна на rue Lepic: кок-о-вен, жареная курица; наряднее", q:"Le Coq et Fils Paris"},
+    {name:"Le Relais Gascon", tip:"гасконский бистро у Abbesses: гигантские салаты, утка с медом, крем-брюле; сытно и недорого", q:"Le Relais Gascon Abbesses Paris"},
+    {name:"Bouillon Pigalle", tip:"классический «бульон» прямо у Мулен Руж: дешево и вкусно, но очередь", q:"Bouillon Pigalle Paris"},
+    {name:"Le Bon Georges", tip:"бистро в 9-м: пате-ан-крут, мясо, шоколадный мусс (45 rue Saint-Georges)", q:"Le Bon Georges Paris"},
+    {name:"Franprix (Монмартр)", tip:"супермаркет у подножия Сакре-Кер: если совсем нет настроения на ресторан - перекус с видом на ступенях", q:"Franprix rue Seveste Montmartre Paris"}
+  ]},
+  {d:4, t:"22:45", name:"Moulin Rouge", lat:48.8841232, lng:2.3322519, pid:"ChIJiQxv_05u5kcRESFIh6-QTvQ", book:"билеты на шоу сильно заранее (moulinrouge.fr)", note:"5 мин пешком вниз от La Mascotte. Двери 22:45, шоу 23:30. После ~01:30: M2 Blanche до Barbès, M4 до Gare de l'Est (в пт до ~02:15, уходи сразу). Запас - ночной Noctilien от Pigalle.", see:"Феерия «Féerie» и финальный канкан."},
+
+  {d:5, t:"09:00", name:"Завтрак-кофе: Ten Belles", lat:48.8735501, lng:2.3648351, pid:"ChIJF_DrCQtu5kcRg88oK6BS03Q", note:"Один из лучших спешелти-кофе 10-го. 7 мин пешком (Du Pain в сб закрыт).", tip:"Флэт-уайт или фильтр + выпечка (банановый хлеб).", opts:[
+    {name:"Café Tranquille", tip:"спешелти-кофе с выпечкой рядом", q:"Cafe Tranquille Paris 10"},
+    {name:"WHITE Coffee", tip:"еще кофейня рядом, топ айс-латте", q:"WHITE Coffee Paris 10"},
+    {name:"Liberté", tip:"одна из лучших булочных у дома, открыта в сб: топовый круассан и пан-о-шоколя (39 rue des Vinaigriers)", q:"Liberte boulangerie Vinaigriers Paris"},
+    {name:"Monop' (у дома)", tip:"супермаркет у дома: возьми перекус в дорогу до аэропорта", q:"Monop' Gare de l'Est Paris"}
+  ]},
+  {d:5, t:"10:00", name:"Выселение из квартиры", lat:48.8802399, lng:2.3651324, pid:"ChIJibRzO3Ru5kcRvlcfCPoz9ZY", note:"Выселение 10:00. Только ручная кладь - собрались быстро."},
+  {d:5, t:"11:30", name:"Porte Maillot → шаттл в Бовэ", lat:48.8779, lng:2.2828, pid:"", book:"билеты на шаттл онлайн заранее (лучше round-trip)", note:"M7 Château Landon до Palais Royal, M1 до Porte Maillot (~40 мин). Выезд ~11:00 на автобус ~12:00 (билеты онлайн заранее). Дорога до аэропорта ~1ч15."},
+  {d:5, t:"13:15", name:"Аэропорт Бовэ (BVA)", lat:49.4553491, lng:2.1112384, pid:"ChIJLTyNDYxv5kcRbtc9TZBbD_o", note:"Рейс FR1889 в 15:35. Шаттл прибывает ~13:15 - впритык: документы Ryanair проверяют на стойке, потом сразу на контроль.", see:"Аэропорт маленький, но досмотр медленный и очереди длинные - не задерживайся."}
+];
+
+// духи (день 3) и цветы (день 4) - сюрприз: авто-показ с 1 сентября 2026, вручную - кнопка ✦ в подвале
+let secretOn = new Date() >= new Date(2026, 8, 1);
+function isVisible(s){ return secretOn || !s.secret; }
+
+// ---- map ----
+const map = L.map('map', {scrollWheelZoom:true}).setView([48.864, 2.349], 12.5);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom:19, attribution:'© OpenStreetMap'
+}).addTo(map);
+
+function gmaps(s){
+  let u = 'https://www.google.com/maps/search/?api=1&query=' + s.lat + ',' + s.lng;
+  if(s.pid) u += '&query_place_id=' + s.pid;
+  return u;
+}
+function gdir(s){ return 'https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng; }
+function gq(q){ return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); }
+
+// координаты альтернатив/магазинов (ключ - поле q варианта)
+const OPT_COORDS = {
+  "Marche des Enfants Rouges Paris":[48.8628656,2.3620448,"ChIJF4z0gwZu5kcRmxOUEU2R8Iw"],
+  "Du Pain et des Idees Paris":[48.8712453,2.3628904,"ChIJBTgW_Atu5kcRE1YZZIA4EzQ"],
+  "Fromagerie Fernin Paris":[48.8794448,2.3633582,"ChIJwUbM8wVv5kcR0K9ZLUEHT9I"],
+  "Marche Beauvau Aligre Paris":[48.8491053,2.3778158,"ChIJxZ3pZQ9y5kcR5gM1lDfZsXc"],
+  "Carrefour City Etretat":[49.7067181,0.2045965,"ChIJGZY3rMYX4EcRAyE_W4uKgDw"],
+  "Rue Mouffetard Market Paris":[48.8404307,2.3498002,"ChIJS3JfE-xx5kcRBwxbA7agJOQ"],
+  "Cafe de la Nouvelle Mairie Paris":[48.8454667,2.3448249,"ChIJqQ9WEuhx5kcRxpB477tYsKs"],
+  "Cafe Tranquille Paris 10":[48.8782772,2.3564293,"ChIJ_woWC21v5kcRYvHFwUcxBxE"],
+  "WHITE Coffee Paris 10":[48.8719498,2.354002,"ChIJ__OLmNNv5kcRQmTNlXZidQE"],
+  "Le Grenier a Pain Abbesses Paris":[48.885322,2.3367393,"ChIJdegQakVu5kcRSFyBLbgk7DU"],
+  "Butte Fromagere Abbesses Paris":[48.8851505,2.3370736,"ChIJxVW1FEVu5kcRFMNlaiubVJg"],
+  "Square Louise Michel Paris":[48.8850123,2.3433924,"ChIJGx56IUNu5kcRV27fexfJ3zI"],
+  "Le Bon Georges Paris":[48.8776756,2.3371619,"ChIJ8R9ZmEdu5kcRJl7X5mDD2us"],
+  "Bouillon Republique Paris":[48.8661074,2.3646338,"ChIJQ7aZhzNv5kcR2ukcRnOizeQ"],
+  "Casimir rue de Belzunce Paris":[48.8793645,2.3525364,"ChIJUzKfemxu5kcRQaC-jYQBcLk"],
+  "Le Petit Cler Paris":[48.857448,2.3061987,"ChIJh32iCt9v5kcRv8zeQH_P9hI"],
+  "Les Cocottes Christian Constant Paris":[48.8582148,2.3019196,"ChIJU5JgmN9v5kcRPHf9BJWJqZs"],
+  "Thoumieux Paris":[48.8595985,2.3088076,"ChIJGxsDsdlv5kcR_8x_z1iaRIo"],
+  "Le Moulin de la Galette Paris":[48.8873961,2.3371292,"ChIJ8ZiCuFpu5kcRyvhTh9aSNZU"],
+  "Le Coq et Fils Paris":[48.8871994,2.3371844,"ChIJTQ7TuVpu5kcRSvp5FZSHjzc"],
+  "Le Relais Gascon Abbesses Paris":[48.8840242,2.3391513,"ChIJpW4VWERu5kcRpFwpIfrfC5c"],
+  "Bouillon Pigalle Paris":[48.8826242,2.3374171,"ChIJVb7Sx0Vu5kcR5gDcYjssPWw"],
+  "HolyBelly 5 Paris":[48.8710383,2.3596596,"ChIJoUBj1Q1u5kcR2Jr5HrzpkYQ"],
+  "Bouillon Chartier Grands Boulevards Paris":[48.8719224,2.3430304,"ChIJ4xutfT5u5kcRaJn2NkiOhPU"],
+  "Le Reveil du 10eme Paris":[48.8712464,2.3580071,"ChIJuwaA4Q1u5kcRmiOGmWQk4P4"],
+  "Restaurant du Golf d'Etretat":[49.7053599,0.2001247,"ChIJQdq-mMgX4EcR5l5vIKzU7vs"],
+  "Comptoir du Pantheon Paris":[48.8465109,2.3439134,"ChIJZbQv_-dx5kcRARl8yz3wTu0"],
+  "Liberte boulangerie Vinaigriers Paris":[48.8730875,2.3615623,"ChIJuealZgxu5kcR0A-bQ7H9EVs"],
+  "Monop' Gare de l'Est Paris":[48.8761545,2.357142,"ChIJubGr9tRv5kcR88EjUe1GRfA"],
+  "Franprix Canal Saint-Martin Paris":[48.874159,2.363673,"ChIJLbfSfgxu5kcRmotJeddHwps"],
+  "Monop' Saint-Germain Paris 5":[48.8492344,2.3552174,"ChIJAVuuMvtx5kcRBrcFfrYj6KY"],
+  "Franprix rue Cler Paris":[48.8575536,2.3062016,"ChIJH1Mbk61v5kcRBis8fVc_Q_A"],
+  "Franprix rue Seveste Montmartre Paris":[48.8840308,2.3446252,"ChIJ_38Z-EJu5kcRXHTQCqLVWgc"]
+};
+
+const layers = {};
+DAYS.forEach(d => layers[d.n] = L.layerGroup());
+
+function pinIcon(hex, sel, alt){
+  const cls = 'pin' + (sel?' sel':'') + (alt?' alt':'');
+  const inner = alt ? 'background:#fff;border-color:'+hex : 'background:'+hex;
+  const sz = sel?26:(alt?14:18), an = sel?13:(alt?7:9);
+  return L.divIcon({className:cls, html:'<span style="'+inner+'"></span>', iconSize:[sz,sz], iconAnchor:[an,an]});
+}
+
+STOPS.forEach(s => {
+  const d = DAYS[s.d-1];
+  const m = L.marker([s.lat, s.lng], {icon: pinIcon(d.hex, false)});
+  let html = '<b>'+s.t+' · '+s.name+'</b><br>'+s.note;
+  if(s.book) html += '<br><b>Бронь:</b> '+s.book;
+  if(s.tip) html += '<br><b>Попробовать:</b> '+s.tip;
+  if(s.see) html += '<br><b>Не пропустить:</b> '+s.see;
+  html += '<br><a class="pop-link" target="_blank" rel="noopener" href="'+gmaps(s)+'">Открыть в Google Maps ›</a>';
+  m.bindPopup(html, {maxWidth:280, autoPanPaddingTopLeft:[20,150], autoPanPaddingBottomRight:[20,30], keepInView:true});
+  m.on('click', () => selectStop(s));
+  if(isVisible(s)) m.addTo(layers[s.d]);
+  s._marker = m;
+  (s.opts||[]).forEach(o => {
+    const c = OPT_COORDS[o.q];
+    if(!c) return;
+    const am = L.marker([c[0], c[1]], {icon: pinIcon(d.hex, false, true)});
+    const url = c[2] ? ('https://www.google.com/maps/search/?api=1&query='+c[0]+','+c[1]+'&query_place_id='+c[2]) : gq(o.q);
+    am.bindPopup('<b>'+o.name+'</b> <span style="color:#8a8276">· вариант</span><br>'+o.tip+'<br><a class="pop-link" target="_blank" rel="noopener" href="'+url+'">Открыть в Google Maps ›</a>', {maxWidth:260, autoPanPaddingTopLeft:[20,150], autoPanPaddingBottomRight:[20,30], keepInView:true});
+    am.addTo(layers[s.d]);
+  });
+});
+
+// показать все точки сразу при загрузке (режим "Все дни")
+DAYS.forEach(d => layers[d.n].addTo(map));
+
+let selected = null;
+function selectStop(s){
+  if(selected && selected._marker){ selected._marker.setIcon(pinIcon(DAYS[selected.d-1].hex, false)); }
+  selected = s;
+  s._marker.setIcon(pinIcon(DAYS[s.d-1].hex, true));
+  s._marker.openPopup();
+}
+
+let active = 'all';
+function visibleStops(){ return (active==='all' ? STOPS : STOPS.filter(s => s.d===active)).filter(isVisible); }
+function applyFilter(day){
+  active = day;
+  DAYS.forEach(d => map.removeLayer(layers[d.n]));
+  if(day==='all'){ DAYS.forEach(d => layers[d.n].addTo(map)); }
+  else { layers[day].addTo(map); }
+  document.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.day===String(day)));
+  document.querySelectorAll('section.day').forEach(sec => {
+    sec.style.display = (day==='all' || sec.dataset.day===String(day)) ? '' : 'none';
+  });
+  const pts = visibleStops().map(s => [s.lat, s.lng]);
+  if(pts.length) map.fitBounds(pts, {padding:[40,40], maxZoom:14});
+}
+
+// ---- chips ----
+const chipsEl = document.getElementById('chips');
+function chip(label, day, hex){
+  const b = document.createElement('button');
+  b.className='chip'; b.dataset.day=String(day); b.setAttribute('aria-pressed', day==='all');
+  b.innerHTML = (hex? '<span class="dot" style="background:'+hex+'"></span>' : '') + label;
+  b.onclick = () => applyFilter(day);
+  chipsEl.appendChild(b);
+}
+chip('Все дни','all',null);
+DAYS.forEach(d => chip(d.n + ' · ' + d.date.split(' · ')[0], d.n, d.hex));
+
+// ---- list ----
+const listEl = document.getElementById('list');
+DAYS.forEach(d => {
+  const sec = document.createElement('section');
+  sec.className='day'; sec.dataset.day=String(d.n);
+  sec.style.setProperty('--day', d.hex);
+  const head = document.createElement('div');
+  head.className='dayhead';
+  head.innerHTML =
+    '<span class="num">'+d.n+'</span>'+
+    '<div class="meta"><div class="date">'+d.date+'</div><div class="sub">'+d.title+'</div></div>'+
+    '<div class="wake">'+d.wake+'</div>';
+  sec.appendChild(head);
+  const body = document.createElement('div');
+  body.className='daybody';
+  STOPS.filter(s => s.d===d.n).forEach(s => {
+    const card = document.createElement('div');
+    card.className='card' + (s.secret?' secret':'');
+    let h = '<div class="top"><span class="time">'+s.t+'</span><span class="name">'+s.name+'</span>'+(s.book?'<span class="badge">бронь</span>':'')+'</div>'+
+            '<div class="note">'+s.note+'</div>';
+    if(s.book) h += '<div class="tip"><b>Бронь</b> '+s.book+'</div>';
+    if(s.tip) h += '<div class="tip"><b>Попробовать</b> '+s.tip+'</div>';
+    if(s.see) h += '<div class="tip"><b>Не пропустить</b> '+s.see+'</div>';
+    h += '<div class="links"><a target="_blank" rel="noopener" href="'+gmaps(s)+'">Открыть в картах</a>'+
+         '<a target="_blank" rel="noopener" href="'+gdir(s)+'">Маршрут</a></div>';
+    if(s.opts && s.opts.length){
+      h += '<div class="opts"><div class="lbl">Еще варианты и магазины</div>';
+      s.opts.forEach(function(o){
+        h += '<div class="opt"><a class="on" target="_blank" rel="noopener" href="'+gq(o.q)+'">'+o.name+'</a> — '+o.tip+'</div>';
+      });
+      h += '</div>';
+    }
+    card.innerHTML = h;
+    card.addEventListener('click', e => {
+      if(e.target.tagName==='A') return;
+      if(active!=='all' && active!==d.n) applyFilter(d.n);
+      document.getElementById('map').scrollIntoView({behavior:'smooth', block:'start'});
+      setTimeout(function(){
+        map.invalidateSize();
+        map.setView([s.lat, s.lng], 15);
+        selectStop(s);
+      }, 320);
+    });
+    body.appendChild(card);
+  });
+  sec.appendChild(body);
+  listEl.appendChild(sec);
+});
+
+// ---- geolocation ----
+let userMarker=null, userCircle=null, watchId=null;
+const locateBtn=document.getElementById('locate');
+function onPos(p){
+  const lat=p.coords.latitude, lng=p.coords.longitude, acc=p.coords.accuracy;
+  const ll=[lat,lng];
+  if(!userMarker){
+    userMarker=L.marker(ll,{icon:L.divIcon({className:'',html:'<div class="userdot"></div>',iconSize:[16,16],iconAnchor:[8,8]}),zIndexOffset:1000,interactive:false}).addTo(map);
+    userCircle=L.circle(ll,{radius:acc,color:'#1a73e8',weight:1,fillColor:'#1a73e8',fillOpacity:.12}).addTo(map);
+  }else{
+    userMarker.setLatLng(ll); userCircle.setLatLng(ll).setRadius(acc);
+  }
+}
+function locate(){
+  if(!navigator.geolocation){ alert('Геолокация недоступна в этом браузере.'); return; }
+  locateBtn.classList.add('on');
+  navigator.geolocation.getCurrentPosition(
+    p=>{ onPos(p); map.setView([p.coords.latitude,p.coords.longitude],15); },
+    err=>{ locateBtn.classList.remove('on'); alert('Не удалось получить локацию: '+err.message+'.\nНужен доступ к геолокации, и страница должна быть открыта по https (например, Netlify) или установлена на главный экран - при открытии файла напрямую браузер часто блокирует геолокацию.'); },
+    {enableHighAccuracy:true, timeout:10000}
+  );
+  if(watchId===null){
+    watchId=navigator.geolocation.watchPosition(onPos, ()=>{}, {enableHighAccuracy:true, maximumAge:5000});
+  }
+}
+locateBtn.addEventListener('click', locate);
+
+// ---- secret toggle ----
+function applySecret(){
+  document.body.classList.toggle('show-secret', secretOn);
+  document.getElementById('secretLbl').textContent = secretOn ? '✦ вкл' : '✦ выкл';
+  STOPS.filter(s => s.secret).forEach(s => {
+    if(secretOn){ if(!layers[s.d].hasLayer(s._marker)) s._marker.addTo(layers[s.d]); }
+    else { layers[s.d].removeLayer(s._marker); }
+  });
+}
+document.getElementById('secretToggle').addEventListener('click', () => { secretOn = !secretOn; applySecret(); });
+applySecret();
+</script>
+</body>
+</html>
