@@ -210,7 +210,7 @@ const STOPS = [
     {name:"WHITE Coffee", tip:"еще кофейня рядом, топ айс-латте", q:"WHITE Coffee Paris 10"},
     {name:"Monop' (у дома)", tip:"супермаркет у дома: йогурт, выпечка, фрукты навынос - быстрый завтрак", q:"Monop' Gare de l'Est Paris"}
   ]},
-  {d:4, t:"10:00", secret:true, name:"ДУХИ: Fragonard Haussmann", lat:48.8720758, lng:2.3292707, pid:"ChIJZX8XrzZu5kcRd4CLPIEitaY", note:"Бутик парфюмерного дома из Грасса, с 10:00. M7 Château Landon до Opéra. Загляни сюда без Нади - сюрприз.", tip:"Eau de toilette (Belle de Nuit, Étoile) ~30 EUR за 50 мл и мыло - лучшие сувениры."},
+  {d:4, t:"10:00", secret:true, name:"ДУХИ: Fragonard Haussmann", lat:48.8720758, lng:2.3292707, pid:"ChIJZX8XrzZu5kcRd4CLPIEitaY", ext:{label:"L'Air de Grasse на сайте", url:"https://www.fragonard.com/en-int/l-air-de-grasse/l-air-de-grasse-p-3548.htm"}, note:"Бутик парфюмерного дома из Грасса, с 10:00. M7 Château Landon до Opéra. Загляни сюда без Нади - сюрприз.", tip:"Цель - L'Air de Grasse: новинка к столетию дома, eau de toilette 50 мл за 23 EUR (мандарин, роза-пион-жасмин, ирис-пачули), ссылку покажи продавцу. Сначала понюхай на коже; запасной вариант - Belle de Nuit. Если хочется стойкости - тот же дом в концентрации Parfum в алюминиевых флаконах, примерно вдвое дороже."},
   {d:4, t:"10:20", name:"Церковь Мадлен", lat:48.8700435, lng:2.3245502, pid:"ChIJ7xwB9TJu5kcRtsJIlPxT918", note:"Неоклассический храм в виде греческого храма-периптера (52 коринфские колонны), строился при Наполеоне как храм воинской славы. 5-7 мин пешком от Fragonard. Вход бесплатный, с 9:30.", see:"Полумрак и три купола внутри, скульптура Магдалины над алтарем (здесь отпевали Шопена); с крыльца - перспектива по rue Royale на площадь Согласия."},
   {d:4, t:"10:50", name:"Сад Пале-Рояль", lat:48.8649723, lng:2.3378061, pid:"ChIJ5bx0qiVu5kcRs_dMpI5ttiY", note:"Тихий сад бывшего дворца кардинала Ришелье, спрятанный за аркадами. ~15 мин пешком от Мадлен.", see:"Черно-белые «Колонны Бюрена», аркады с лавками, фонтаны - очень фотогенично и бесплатно."},
   {d:4, t:"11:20", name:"Сад Тюильри", lat:48.8634916, lng:2.3274943, pid:"ChIJAQAAMCxu5kcRx--_4QnbGcI", note:"Королевский регулярный сад между Лувром и площадью Согласия, разбит Ле Нотром (автором Версаля). 5-8 мин от Пале-Рояля.", see:"Аллеи со скульптурами, пруды с зелеными стульями (займи и посиди как парижане), вид на Лувр и обелиск Конкорд."},
@@ -374,6 +374,7 @@ STOPS.forEach(s => {
   if(s.see) html += '<br><b>Не пропустить:</b> '+s.see;
   html += '<br><a class="pop-link" target="_blank" rel="noopener" href="'+gmaps(s)+'">Открыть в Google Maps ›</a>';
   if(s.gm) html += ' <a class="pop-link" target="_blank" rel="noopener" href="'+s.gm+'">Маршрут на автобус ›</a>';
+  if(s.ext) html += ' <a class="pop-link" target="_blank" rel="noopener" href="'+s.ext.url+'">'+s.ext.label+' ›</a>';
   m.bindPopup(html, {maxWidth:280, autoPanPaddingTopLeft:[20,150], autoPanPaddingBottomRight:[20,30], keepInView:true});
   m.on('click', () => selectStop(s));
   if(isVisible(s)) m.addTo(layers[s.d]);
@@ -454,7 +455,8 @@ DAYS.forEach(d => {
     if(s.see) h += '<div class="tip"><b>Не пропустить</b> '+s.see+'</div>';
     h += '<div class="links"><a target="_blank" rel="noopener" href="'+gmaps(s)+'">Открыть в картах</a>'+
          '<a target="_blank" rel="noopener" href="'+gdir(s)+'">Маршрут</a>'+
-         (s.gm ? '<a target="_blank" rel="noopener" href="'+s.gm+'">Google Maps ›</a>' : '')+'</div>';
+         (s.gm ? '<a target="_blank" rel="noopener" href="'+s.gm+'">Google Maps ›</a>' : '')+
+         (s.ext ? '<a target="_blank" rel="noopener" href="'+s.ext.url+'">'+s.ext.label+' ›</a>' : '')+'</div>';
     if(s.opts && s.opts.length){
       h += '<div class="opts"><div class="lbl">Еще варианты и магазины</div>';
       s.opts.forEach(function(o){
