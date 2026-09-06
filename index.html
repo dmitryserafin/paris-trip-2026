@@ -69,14 +69,17 @@
   .daybody:before{content:''; position:absolute; left:6px; top:14px; bottom:16px; width:2px; background:var(--day); opacity:.32; border-radius:2px}
 
   .card{position:relative; background:var(--surface); border:1px solid var(--line); border-radius:13px;
-    padding:12px 14px; margin:9px 0; cursor:pointer; transition:transform .12s}
+    padding:12px 14px; margin:9px 0}
   .card:before{content:''; position:absolute; left:-21px; top:16px; width:11px; height:11px; border-radius:50%;
     background:var(--day); border:2.5px solid var(--paper); box-shadow:0 0 0 1px var(--line)}
-  .card:active{transform:scale(.992)}
   .card .top{display:flex; align-items:center; gap:10px}
   .card .time{font-family:var(--mono); font-weight:600; font-size:12px; letter-spacing:.02em; color:var(--ink);
     border:1px solid var(--line); border-radius:6px; padding:3px 7px; flex:0 0 auto}
   .card .name{font-family:var(--serif); font-weight:600; font-size:16px; line-height:1.15}
+  .card .mapbtn{flex:0 0 auto; width:32px; height:32px; border-radius:9px; border:1px solid var(--line); background:var(--paper);
+    color:var(--accent); display:inline-flex; align-items:center; justify-content:center; padding:0; cursor:pointer; -webkit-tap-highlight-color:transparent}
+  .card .mapbtn svg{width:17px; height:17px; display:block}
+  .card .mapbtn:active{background:#e3e2d8}
   .card .note{font-size:13px; color:var(--ink2); margin-top:7px; line-height:1.5}
   .card .tip{font-size:12.5px; margin-top:8px; line-height:1.5; color:var(--ink)}
   .card .tip b{display:block; font-family:var(--mono); font-weight:600; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--accent); margin-bottom:2px}
@@ -124,7 +127,7 @@
 </div>
 
 <main>
-  <div class="hint">Каждый день - своя линия со станциями. Крупные точки - основной маршрут, кольца - альтернативы и магазины под пикник. Тап по карточке наводит карту на станцию; тап по кольцу открывает вариант.</div>
+  <div class="hint">Каждый день - своя линия со станциями. Крупные точки - основной маршрут, кольца - альтернативы и магазины под пикник. Кнопка с пином у названия наводит карту на станцию; тап по кольцу открывает вариант.</div>
   <div id="list"></div>
 </main>
 
@@ -277,7 +280,7 @@ const STOPS = [
     {name:"Monop' (у дома)", tip:"супермаркет у дома: возьми перекус в дорогу до аэропорта", q:"Monop' Gare de l'Est Paris"}
   ]},
   {d:6, t:"10:00", name:"Выселение: комната, до 10:00", lat:48.8802399, lng:2.3651324, pid:"ChIJibRzO3Ru5kcRvlcfCPoz9ZY", note:"Выезд до 10:00, ключи - как договоришься с Edith (+33 6 12 23 03 05). Только рюкзаки - собрались быстро."},
-  {d:6, t:"10:45", name:"Porte Maillot → Aerobus A01 в Бовэ", lat:48.8779, lng:2.2828, pid:"", book:"куплено: Aerobus 9S8CQB, обратная половина - время 10:30 в билете ориентировочное, годится любой автобус", note:"Из квартиры ~10:20: пешком до Magenta ~10 мин, RER E две остановки до Porte Maillot (~10 мин). Остановка 22-24 bd Pershing напротив Palais des Congres. Автобусы каждые 10-30 мин, садись в ближайший, лучше до 11:30. Aerobus просит быть на Porte Maillot за 3ч45 до вылета - то есть до 11:50. Дорога ~1ч15.", see:"Место за конкретным автобусом не закреплено: в субботу на Porte Maillot бывает очередь, не тяни до последнего."},
+  {d:6, t:"10:45", name:"Porte Maillot → Aerobus A01 в Бовэ", lat:48.8799470, lng:2.2822826, pid:"", book:"куплено: Aerobus 9S8CQB, обратная половина - время 10:30 в билете ориентировочное, годится любой автобус", note:"Из квартиры ~10:20: пешком до Magenta ~10 мин, RER E две остановки до Porte Maillot (~10 мин). Остановка 22-24 bd Pershing напротив Palais des Congres. Автобусы каждые 10-30 мин, садись в ближайший, лучше до 11:30. Aerobus просит быть на Porte Maillot за 3ч45 до вылета - то есть до 11:50. Дорога ~1ч15.", see:"Место за конкретным автобусом не закреплено: в субботу на Porte Maillot бывает очередь, не тяни до последнего."},
   {d:6, t:"12:15", name:"Аэропорт Бовэ (BVA)", lat:49.4553491, lng:2.1112384, pid:"ChIJLTyNDYxv5kcRbtc9TZBbD_o", book:"Ryanair N69BXX: FR1889, 15:35-17:45, 2ч10", note:"Шаттл прибывает ~12:15, до вылета три часа - как раз: сначала стойка Ryanair за штампом в посадочный (для не-ЕС паспортов обязательно), потом досмотр.", see:"Аэропорт маленький, но досмотр медленный и очереди длинные - не задерживайся."},
   {d:6, far:true, t:"22:30", name:"Домой: автобус Модлин - Минск", lat:52.450886, lng:20.648988, pid:"", book:"куплено: билеты 5430194 (Дима, место 8) и 5430195 (Надя, место 7), по 162 BYN", note:"Отправление 19 сент в 22:30 от аэропорта Модлин - парковка у центрального входа. Прибытие в Минск, Центральный автовокзал, 20 сент в 10:00. Перевозчик IP BayerTrans. FR1889 садится в Модлине в 17:45 - до автобуса 4ч45 в аэропорту, запасись едой и павербанком.", see:"Оперативные отклонения по рейсу перевозчик публикует в телеграм-канале intercars_europe - проверь перед вылетом из Бовэ."}
 ];
@@ -444,7 +447,11 @@ DAYS.forEach(d => {
   STOPS.filter(s => s.d===d.n).forEach(s => {
     const card = document.createElement('div');
     card.className='card' + (s.secret?' secret':'');
-    let h = '<div class="top"><span class="time">'+s.t+'</span><span class="name">'+s.name+'</span>'+(s.book?'<span class="badge">бронь</span>':'')+'</div>'+
+    let h = '<div class="top"><span class="time">'+s.t+'</span><span class="name">'+s.name+'</span>'+
+            '<button type="button" class="mapbtn" aria-label="Показать на карте" title="Показать на карте">'+
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+            '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg></button>'+
+            (s.book?'<span class="badge">бронь</span>':'')+'</div>'+
             '<div class="note">'+s.note+'</div>';
     if(s.book) h += '<div class="tip"><b>Бронь</b> '+s.book+'</div>';
     if(s.tip) h += '<div class="tip"><b>Попробовать</b> '+s.tip+'</div>';
@@ -461,8 +468,7 @@ DAYS.forEach(d => {
       h += '</div>';
     }
     card.innerHTML = h;
-    card.addEventListener('click', e => {
-      if(e.target.tagName==='A') return;
+    card.querySelector('.mapbtn').addEventListener('click', () => {
       if(active!=='all' && active!==d.n) applyFilter(d.n);
       document.getElementById('map').scrollIntoView({behavior:'smooth', block:'start'});
       setTimeout(function(){
